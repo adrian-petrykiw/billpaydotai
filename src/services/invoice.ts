@@ -82,4 +82,17 @@ export class InvoiceProcessor {
     // Add validation logic here
     return true;
   }
+
+  async checkHealth(): Promise<boolean> {
+    try {
+      // Test the OpenAI connection
+      const testMessage = await this.model.invoke([
+        { content: "test", role: "user" },
+      ]);
+      return !!testMessage;
+    } catch (error) {
+      console.error("Invoice processor health check failed:", error);
+      return false;
+    }
+  }
 }

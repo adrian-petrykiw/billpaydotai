@@ -1,5 +1,5 @@
 // src/config/solana.ts
-import { SolanaAgentKit } from "solana-agent-kit";
+import { EnhancedSolanaAgent } from "../services/solanaAgent";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { PublicKey } from "@solana/web3.js";
@@ -8,19 +8,15 @@ export const initializeSolanaAgent = (
   privateKey: string,
   rpcUrl: string,
   openAiKey: string
-): SolanaAgentKit => {
-  return new SolanaAgentKit(privateKey, rpcUrl, openAiKey);
+): EnhancedSolanaAgent => {
+  return new EnhancedSolanaAgent(privateKey, rpcUrl, openAiKey);
 };
 
-// Tool for executing payments
-export const createPaymentTool = (agent: SolanaAgentKit) =>
+export const createPaymentTool = (agent: EnhancedSolanaAgent) =>
   tool(
     async ({ recipient, amount, currency }) => {
       try {
-        // Convert recipient address to PublicKey
         const recipientPubkey = new PublicKey(recipient);
-
-        // Execute payment (implementation will vary based on currency)
         const signature = await agent.transfer(recipientPubkey, amount);
 
         return {
