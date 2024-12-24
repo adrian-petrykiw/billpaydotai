@@ -1,4 +1,3 @@
-// src/chains/invoiceProcessing.ts
 import { SolanaAgentKit } from "solana-agent-kit";
 import { Invoice, TransactionStatus } from "../types";
 import { InvoiceProcessor } from "../services/invoice";
@@ -31,8 +30,10 @@ export class InvoiceProcessingChain {
       // Will implement actual payment logic in next iteration
 
       return txStatus;
-    } catch (error) {
-      throw new Error(`Invoice processing failed: ${error.message}`);
+    } catch (error: any) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      throw new Error(`Invoice processing failed: ${errorMessage}`);
     }
   }
 }

@@ -1,8 +1,15 @@
-// src/types/index.ts
-
 import { Invoice } from "../types";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { ChatOpenAI } from "@langchain/openai";
+import {
+  HumanMessage,
+  SystemMessage,
+  AIMessage,
+} from "@langchain/core/messages";
+import {
+  MessageContentText,
+  MessageContent,
+  MessageContentComplex,
+} from "@langchain/core/messages";
 
 export class InvoiceProcessor {
   private model: ChatOpenAI;
@@ -13,6 +20,32 @@ export class InvoiceProcessor {
       modelName: "gpt-4-turbo-preview",
       temperature: 0,
     });
+  }
+
+  private isMessageContentText(
+    content: MessageContentComplex
+  ): content is MessageContentText {
+    return content.type === "text";
+  }
+
+  private extractText(content: MessageContent): string {
+    if (typeof content === "string") {
+      return content;
+    }
+    if (Array.isArray(content)) {
+      return content
+        .map((item) => {
+          if (typeof item === "string") {
+            return item;
+          }
+          if (this.isMessageContentText(item)) {
+            return item.text;
+          }
+          return "";
+        })
+        .join("");
+    }
+    return "";
   }
 
   async extractInvoiceData(pdfText: string): Promise<Invoice> {
@@ -32,8 +65,17 @@ export class InvoiceProcessor {
       content: pdfText,
     });
 
-    const response = await this.model.invoke([systemPrompt, userPrompt]);
-    return JSON.parse(response.content) as Invoice;
+    const response = (await this.model.invoke([
+      systemPrompt,
+      userPrompt,
+    ])) as AIMessage;
+    const contentStr = this.extractText(response.content);
+
+    if (!contentStr) {
+      throw new Error("Failed to extract text content from model response");
+    }
+
+    return JSON.parse(contentStr) as Invoice;
   }
 
   async validateInvoice(invoice: Invoice): Promise<boolean> {
