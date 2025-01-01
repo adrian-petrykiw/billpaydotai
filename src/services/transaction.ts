@@ -24,7 +24,7 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createTransferInstruction,
 } from "@solana/spl-token";
-import { transactionMessageToVaultMessage } from "./squads";
+import { getAccountsForExecute, transactionMessageToVaultMessage } from "./squads";
 
 interface TransactionValidation {
   isValid: boolean;
@@ -205,7 +205,7 @@ export class TransactionService {
       });
 
       // Get execution accounts
-      const { accountMetas } = await getAccountsForExecuteCore(
+      const { accountMetas } = await getAccountsForExecute(
         this.heliusConnection,
         senderMultisigPda,
         compiledMessage,
@@ -240,13 +240,13 @@ export class TransactionService {
       });
 
       // Execute transaction
-      const { instruction: executeIx } = vaultTransactionExecuteSync({
-        multisigPda: senderMultisigPda,
-        transactionIndex: newTransactionIndex,
-        member: this.agent.wallet_address,
-        accountsForExecute: accountMetas,
-        programId: PROGRAM_ID,
-      });
+      const { instruction: executeIx } = vaultTransactionExecuteSync(
+        senderMultisigPda,
+        newTransactionIndex,
+        this.agent.wallet_address,
+        accountMetas,
+        PROGRAM_ID,
+      );
 
       // Combine all instructions
       const transaction = new Transaction().add(
